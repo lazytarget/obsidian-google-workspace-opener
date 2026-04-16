@@ -1,11 +1,11 @@
 {
-	"id": "sample-plugin",
-	"name": "Sample Plugin",
+	"id": "obsidian-google-workspace-opener",
+	"name": "Google Workspace Opener",
 	"version": "1.0.0",
 	"minAppVersion": "0.15.0",
-	"description": "Demonstrates some of the capabilities of the Obsidian API.",
-	"author": "Obsidian",
-	"authorUrl": "https://obsidian.md",
-	"fundingUrl": "https://obsidian.md/pricing",
+	"description": "Open .gdoc and .gsheet files from Obsidian in an external browser.",
+	"author": "lazytarget",
+	"authorUrl": "https://github.com/lazytarget/",
+	"fundingUrl": "https://github.com/sponsors/lazytarget",
 	"isDesktopOnly": false
 }

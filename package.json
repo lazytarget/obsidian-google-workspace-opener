@@ -1,7 +1,7 @@
 {
-	"name": "obsidian-sample-plugin",
+	"name": "obsidian-google-workspace-opener",
 	"version": "1.0.0",
-	"description": "This is a sample plugin for Obsidian (https://obsidian.md)",
+	"description": "Open .gdoc and .gsheet files from Obsidian in an external browser.",
 	"main": "main.js",
 	"type": "module",
 	"engines": {
@@ -13,8 +13,14 @@
 		"version": "node version-bump.mjs && git add manifest.json versions.json",
 		"lint": "eslint \"src/**/*.ts\""
 	},
-	"keywords": [],
-	"license": "0-BSD",
+	"keywords": [
+		"obsidian",
+		"obsidian-plugin",
+		"google-docs",
+		"google-sheets",
+		"google-workspace"
+	],
+	"license": "MIT",
 	"devDependencies": {
 		"@eslint/json": "0.14.0",
 		"@types/node": "^16.11.6",
