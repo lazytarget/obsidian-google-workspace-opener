@@ -17,6 +17,7 @@ const tsconfigRootDir = dirname(fileURLToPath(import.meta.url));
 
 export default tseslint.config(
 	{
+		files: ["src/**/*.ts", "manifest.json"],
 		languageOptions: {
 			globals: {
 				...globals.browser,
