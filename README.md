@@ -1,90 +1,78 @@
-# Obsidian Sample Plugin
+﻿# Google Workspace Opener for Obsidian
 
-This is a sample plugin for Obsidian (https://obsidian.md).
+[![GitHub Release](https://img.shields.io/github/v/release/lazytarget/obsidian-google-workspace-opener?style=flat-square)](https://github.com/lazytarget/obsidian-google-workspace-opener/releases/latest)
+[![Obsidian Downloads](https://img.shields.io/badge/dynamic/json?style=flat-square&logo=obsidian&color=7c3aed&label=downloads&query=%24%5B%22obsidian-google-workspace-opener%22%5D.downloads&url=https%3A%2F%2Fraw.githubusercontent.com%2Fobsidianmd%2Fobsidian-releases%2Fmaster%2Fcommunity-plugin-stats.json)](https://obsidian.md/plugins?id=obsidian-google-workspace-opener)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](LICENSE)
 
-This project uses TypeScript to provide type checking and documentation.
-The repo depends on the latest plugin API (obsidian.d.ts) in TypeScript Definition format, which contains TSDoc comments describing what it does.
+Seamlessly open `.gdoc` and `.gsheet` files from your Obsidian vault directly in your browser. If you keep your Google Drive folder inside your vault, this plugin intercepts clicks on those Google Workspace shortcut files and routes them to the correct Google Docs or Google Sheets URL — instead of showing a confusing error in Obsidian.
 
-This sample plugin demonstrates some of the basic functionality the plugin API can do.
-- Adds a ribbon icon, which shows a Notice when clicked.
-- Adds a command "Open modal (simple)" which opens a Modal.
-- Adds a plugin setting tab to the settings page.
-- Registers a global click event and output 'click' to the console.
-- Registers a global interval which logs 'setInterval' to the console.
+---
 
-## First time developing plugins?
+## How it works
 
-Quick starting guide for new plugin devs:
+Google Drive Desktop stores `.gdoc` and `.gsheet` files as small stubs on your filesystem. The plugin handles both modes that Google Drive Desktop can operate in:
 
-- Check if [someone already developed a plugin for what you want](https://obsidian.md/plugins)! There might be an existing plugin similar enough that you can partner up with.
-- Make a copy of this repo as a template with the "Use this template" button (login to GitHub if you don't see it).
-- Clone your repo to a local development folder. For convenience, you can place this folder in your `.obsidian/plugins/your-plugin-name` folder.
-- Install NodeJS, then run `npm i` in the command line under your repo folder.
-- Run `npm run dev` to compile your plugin from `main.ts` to `main.js`.
-- Make changes to `main.ts` (or create new `.ts` files). Those changes should be automatically compiled into `main.js`.
-- Reload Obsidian to load the new version of your plugin.
-- Enable plugin in settings window.
-- For updates to the Obsidian API run `npm update` in the command line under your repo folder.
+| Google Drive mode | Stub type | Strategy used |
+|---|---|---|
+| **Mirror** (files downloaded locally) | JSON file containing a `url` field | Reads the URL directly and opens it in the browser |
+| **Stream** (cloud-only stubs) | OS-level directory stub (`EISDIR`) | Hands the path to the OS shell, which lets Google Drive Desktop resolve and open the file |
 
-## Releasing new releases
+Both strategies silently close the Obsidian leaf after routing so there is no leftover blank tab.
 
-- Update your `manifest.json` with your new version number, such as `1.0.1`, and the minimum Obsidian version required for your latest release.
-- Update your `versions.json` file with `"new-plugin-version": "minimum-obsidian-version"` so older versions of Obsidian can download an older version of your plugin that's compatible.
-- Create new GitHub release using your new version number as the "Tag version". Use the exact version number, don't include a prefix `v`. See here for an example: https://github.com/obsidianmd/obsidian-sample-plugin/releases
-- Upload the files `manifest.json`, `main.js`, `styles.css` as binary attachments. Note: The manifest.json file must be in two places, first the root path of your repository and also in the release.
-- Publish the release.
+---
 
-> You can simplify the version bump process by running `npm version patch`, `npm version minor` or `npm version major` after updating `minAppVersion` manually in `manifest.json`.
-> The command will bump version in `manifest.json` and `package.json`, and add the entry for the new version to `versions.json`
+## Requirements
 
-## Adding your plugin to the community plugin list
+- **Obsidian** v0.15.0 or later (desktop)
+- **Google Drive Desktop** installed and running
+- Your Google Drive folder (or a subfolder of it) added to your Obsidian vault
 
-- Check the [plugin guidelines](https://docs.obsidian.md/Plugins/Releasing/Plugin+guidelines).
-- Publish an initial version.
-- Make sure you have a `README.md` file in the root of your repo.
-- Make a pull request at https://github.com/obsidianmd/obsidian-releases to add your plugin.
+---
 
-## How to use
+## Installation
 
-- Clone this repo.
-- Make sure your NodeJS is at least v18.18 (`node --version`).
-- `npm i` or `yarn` to install dependencies.
-- `npm run dev` to start compilation in watch mode.
+### Community plugins (recommended)
 
-## Manually installing the plugin
+1. Open **Settings → Community plugins** and disable Safe mode if prompted.
+2. Click **Browse** and search for **Google Workspace Opener**.
+3. Click **Install**, then **Enable**.
 
-- Copy over `main.js`, `styles.css`, `manifest.json` to your vault `VaultFolder/.obsidian/plugins/your-plugin-id/`.
+### Manual installation
 
-## Improve code quality with eslint
-- [ESLint](https://eslint.org/) is a tool that analyzes your code to quickly find problems. You can run ESLint against your plugin to find common bugs and ways to improve your code. 
-- This project already has eslint preconfigured, you can invoke a check by running`npm run lint`
-- Together with a custom eslint [plugin](https://github.com/obsidianmd/eslint-plugin) for Obsidan specific code guidelines.
-- A GitHub action is preconfigured to automatically lint every commit on all branches.
+1. Download `main.js`, `manifest.json`, and `styles.css` from the [latest release](https://github.com/lazytarget/obsidian-google-workspace-opener/releases/latest).
+2. Copy the three files into `<your vault>/.obsidian/plugins/obsidian-google-workspace-opener/`.
+3. Reload Obsidian and enable the plugin under **Settings → Community plugins**.
 
-## Funding URL
+---
 
-You can include funding URLs where people who use your plugin can financially support it.
+## Development
 
-The simple way is to set the `fundingUrl` field to your link in your `manifest.json` file:
+Requirements: Node.js ≥ 18.18
 
-```json
-{
-    "fundingUrl": "https://buymeacoffee.com"
-}
+```bash
+git clone https://github.com/lazytarget/obsidian-google-workspace-opener.git
+cd obsidian-google-workspace-opener
+npm install
+npm run dev   # watch mode — outputs main.js
 ```
 
-If you have multiple URLs, you can also do:
+Copy the output files into your vault's plugin folder (or symlink the repo there directly) and reload Obsidian to test changes.
 
-```json
-{
-    "fundingUrl": {
-        "Buy Me a Coffee": "https://buymeacoffee.com",
-        "GitHub Sponsor": "https://github.com/sponsors",
-        "Patreon": "https://www.patreon.com/"
-    }
-}
+To do a production build with type-checking:
+
+```bash
+npm run build
 ```
 
-## API Documentation
+### Releasing a new version
 
-See https://docs.obsidian.md
+1. Update `minAppVersion` in `manifest.json` if needed.
+2. Run `npm version patch` (or `minor` / `major`) — this bumps `manifest.json`, `package.json`, and `versions.json` automatically.
+3. Create a GitHub release using the new version number as the tag (no `v` prefix).
+4. Attach `main.js`, `manifest.json`, and `styles.css` as release assets.
+
+---
+
+## License
+
+[MIT](LICENSE) © [lazytarget](https://github.com/lazytarget/)
