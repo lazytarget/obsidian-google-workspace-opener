@@ -1,7 +1,19 @@
+/// <reference types="node" />
+import { dirname } from "path";
+import { fileURLToPath } from "url";
 import tseslint from 'typescript-eslint';
 import obsidianmd from "eslint-plugin-obsidianmd";
 import globals from "globals";
 import { globalIgnores } from "eslint/config";
+
+const recommendedConfig = obsidianmd.configs?.recommended;
+const recommendedConfigs = (Array.isArray(recommendedConfig)
+	? recommendedConfig
+	: recommendedConfig
+		? [recommendedConfig]
+		: []) as Parameters<typeof tseslint.config>;
+
+const tsconfigRootDir = dirname(fileURLToPath(import.meta.url));
 
 export default tseslint.config(
 	{
@@ -12,20 +24,20 @@ export default tseslint.config(
 			parserOptions: {
 				projectService: {
 					allowDefaultProject: [
-						'eslint.config.js',
 						'manifest.json'
 					]
 				},
-				tsconfigRootDir: import.meta.dirname,
+				tsconfigRootDir,
 				extraFileExtensions: ['.json']
 			},
 		},
 	},
-	...obsidianmd.configs.recommended,
+	...recommendedConfigs,
 	globalIgnores([
 		"node_modules",
 		"dist",
 		"esbuild.config.mjs",
+		"eslint.config.mts",
 		"eslint.config.js",
 		"version-bump.mjs",
 		"versions.json",
