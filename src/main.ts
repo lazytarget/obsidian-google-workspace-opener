@@ -1,99 +1,89 @@
-import {App, Editor, MarkdownView, Modal, Notice, Plugin} from 'obsidian';
-import {DEFAULT_SETTINGS, MyPluginSettings, SampleSettingTab} from "./settings";
+import { Plugin, FileView, WorkspaceLeaf, TFile } from 'obsidian';
 
-// Remember to rename these classes and interfaces!
+const VIEW_TYPE_GOOGLE_WORKSPACE = "google-workspace-view";
 
-export default class MyPlugin extends Plugin {
-	settings: MyPluginSettings;
+// 1. Create the Custom View
+class GoogleWorkspaceView extends FileView {
+    constructor(leaf: WorkspaceLeaf) {
+        super(leaf);
+    }
 
-	async onload() {
-		await this.loadSettings();
+    getViewType() {
+        return VIEW_TYPE_GOOGLE_WORKSPACE;
+    }
 
-		// This creates an icon in the left ribbon.
-		this.addRibbonIcon('dice', 'Sample', (evt: MouseEvent) => {
-			// Called when the user clicks the icon.
-			new Notice('This is a notice!');
-		});
+    getDisplayText() {
+        return "Routing to Google Workspace...";
+    }
 
-		// This adds a status bar item to the bottom of the app. Does not work on mobile apps.
-		const statusBarItemEl = this.addStatusBarItem();
-		statusBarItemEl.setText('Status bar text');
+    // This lifecycle method runs as soon as Obsidian tries to load the file into the view
+    async onLoadFile(file: TFile) {
+        console.log(`[GoogleWorkspace] onLoadFile called for: ${file.path}`);
 
-		// This adds a simple command that can be triggered anywhere
-		this.addCommand({
-			id: 'open-modal-simple',
-			name: 'Open modal (simple)',
-			callback: () => {
-				new SampleModal(this.app).open();
-			}
-		});
-		// This adds an editor command that can perform some operation on the current editor instance
-		this.addCommand({
-			id: 'replace-selected',
-			name: 'Replace selected content',
-			editorCallback: (editor: Editor, view: MarkdownView) => {
-				editor.replaceSelection('Sample editor command');
-			}
-		});
-		// This adds a complex command that can check whether the current state of the app allows execution of the command
-		this.addCommand({
-			id: 'open-modal-complex',
-			name: 'Open modal (complex)',
-			checkCallback: (checking: boolean) => {
-				// Conditions to check
-				const markdownView = this.app.workspace.getActiveViewOfType(MarkdownView);
-				if (markdownView) {
-					// If checking is true, we're simply "checking" if the command can be run.
-					// If checking is false, then we want to actually perform the operation.
-					if (!checking) {
-						new SampleModal(this.app).open();
-					}
+        // Strategy A: try reading the file as a local JSON stub.
+        // Google Drive Desktop in "mirror" mode stores .gdoc/.gsheet files as small
+        // JSON files: { "url": "https://docs.google.com/...", "doc_id": "...", ... }
+        try {
+            const content = await this.app.vault.read(file);
+            console.log(`[GoogleWorkspace] file content (first 200 chars): ${content.slice(0, 200)}`);
 
-					// This command will only show up in Command Palette when the check function returns true
-					return true;
-				}
-				return false;
-			}
-		});
+            const payload = JSON.parse(content);
+            console.log(`[GoogleWorkspace] parsed payload:`, payload);
+            const url = payload.url;
 
-		// This adds a settings tab so the user can configure various aspects of the plugin
-		this.addSettingTab(new SampleSettingTab(this.app, this));
+            if (url) {
+                console.log(`[GoogleWorkspace] opening URL via window.open: ${url}`);
+                window.open(url);
+                setTimeout(() => this.leaf.detach(), 0);
+                return;
+            }
+            console.warn("[GoogleWorkspace] No 'url' field found in payload:", payload);
+        } catch (e) {
+            // Strategy A failed — most likely because Google Drive Desktop is running in
+            // "stream" mode: the .gdoc file is a cloud-only stub that the OS filesystem
+            // reports as a directory (EISDIR).  Fall through to Strategy B.
+            console.warn("[GoogleWorkspace] vault.read() failed (likely a stream-mode stub):", (e as Error).message);
+        }
 
-		// If the plugin hooks up any global DOM events (on parts of the app that doesn't belong to this plugin)
-		// Using this function will automatically remove the event listener when this plugin is disabled.
-		this.registerDomEvent(document, 'click', (evt: MouseEvent) => {
-			new Notice("Click");
-		});
+        // Strategy B: hand the file back to the OS shell.
+        // Google Drive Desktop registers the .gdoc/.gsheet file associations at the OS level
+        // and will intercept shell.openPath(), resolve the stub, and open the browser.
+        await this.openViaShell(file);
+        setTimeout(() => this.leaf.detach(), 0);
+    }
 
-		// When registering intervals, this function will automatically clear the interval when the plugin is disabled.
-		this.registerInterval(window.setInterval(() => console.log('setInterval'), 5 * 60 * 1000));
+    private async openViaShell(file: TFile) {
+        // getBasePath() is only available on the desktop FileSystemAdapter
+        const basePath = (this.app.vault.adapter as any).getBasePath?.();
+        if (!basePath) {
+            console.error("[GoogleWorkspace] Could not resolve vault base path — is this a mobile vault?");
+            return;
+        }
+        const fullPath = require('path').join(basePath, file.path);
+        console.log(`[GoogleWorkspace] opening via shell.openPath: ${fullPath}`);
 
-	}
-
-	onunload() {
-	}
-
-	async loadSettings() {
-		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData() as Partial<MyPluginSettings>);
-	}
-
-	async saveSettings() {
-		await this.saveData(this.settings);
-	}
+        const { shell } = require('electron');
+        const error = await shell.openPath(fullPath);
+        if (error) {
+            console.error(`[GoogleWorkspace] shell.openPath failed: ${error}`);
+        }
+    }
 }
 
-class SampleModal extends Modal {
-	constructor(app: App) {
-		super(app);
-	}
+export default class GoogleWorkspacePlugin extends Plugin {
+    async onload() {
+        // Register the custom view with Obsidian
+        this.registerView(
+            VIEW_TYPE_GOOGLE_WORKSPACE,
+            (leaf) => new GoogleWorkspaceView(leaf)
+        );
 
-	onOpen() {
-		let {contentEl} = this;
-		contentEl.setText('Woah!');
-	}
+        // Override the default behavior for these specific extensions
+        this.registerExtensions(['gdoc', 'gsheet'], VIEW_TYPE_GOOGLE_WORKSPACE);
+    }
 
-	onClose() {
-		const {contentEl} = this;
-		contentEl.empty();
-	}
+    onunload() {
+        // Cleanup logic goes here if needed, but registering views/extensions 
+        // is generally handled by Obsidian upon unload.
+    }
 }
