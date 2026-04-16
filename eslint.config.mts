@@ -7,11 +7,9 @@ import globals from "globals";
 import { globalIgnores } from "eslint/config";
 
 const recommendedConfig = obsidianmd.configs?.recommended;
-const recommendedConfigs = (Array.isArray(recommendedConfig)
-	? recommendedConfig
-	: recommendedConfig
-		? [recommendedConfig]
-		: []) as Parameters<typeof tseslint.config>;
+const recommendedConfigs = ([
+	...(recommendedConfig as Iterable<unknown> | undefined ?? []),
+] as unknown[]) as Parameters<typeof tseslint.config>;
 
 const tsconfigRootDir = dirname(fileURLToPath(import.meta.url));
 
