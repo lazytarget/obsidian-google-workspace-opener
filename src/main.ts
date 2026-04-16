@@ -1,6 +1,38 @@
-import { Plugin, FileView, WorkspaceLeaf, TFile } from 'obsidian';
+import { Plugin, FileSystemAdapter, FileView, WorkspaceLeaf, TFile, Notice } from 'obsidian';
 
 const VIEW_TYPE_GOOGLE_WORKSPACE = "google-workspace-view";
+
+function extractGoogleWorkspaceUrl(content: string): string | null {
+    let parsed: unknown;
+
+    try {
+        parsed = JSON.parse(content);
+    } catch {
+        return null;
+    }
+
+    if (typeof parsed !== 'object' || parsed === null) {
+        return null;
+    }
+
+    const { url } = parsed as { url?: unknown };
+    return typeof url === 'string' ? url : null;
+}
+
+type ElectronShellModule = {
+    shell: {
+        openPath: (fullPath: string) => Promise<string>;
+    };
+};
+
+function isElectronShellModule(value: unknown): value is ElectronShellModule {
+    if (typeof value !== 'object' || value === null) {
+        return false;
+    }
+
+    const module = value as { shell?: { openPath?: unknown } };
+    return typeof module.shell?.openPath === 'function';
+}
 
 // 1. Create the Custom View
 class GoogleWorkspaceView extends FileView {
@@ -13,60 +45,58 @@ class GoogleWorkspaceView extends FileView {
     }
 
     getDisplayText() {
-        return "Routing to Google Workspace...";
+        return "Route to google workspace...";
     }
 
     // This lifecycle method runs as soon as Obsidian tries to load the file into the view
     async onLoadFile(file: TFile) {
-        console.log(`[GoogleWorkspace] onLoadFile called for: ${file.path}`);
+        let opened = false;
 
-        // Strategy A: try reading the file as a local JSON stub.
-        // Google Drive Desktop in "mirror" mode stores .gdoc/.gsheet files as small
-        // JSON files: { "url": "https://docs.google.com/...", "doc_id": "...", ... }
         try {
             const content = await this.app.vault.read(file);
-            console.log(`[GoogleWorkspace] file content (first 200 chars): ${content.slice(0, 200)}`);
-
-            const payload = JSON.parse(content);
-            console.log(`[GoogleWorkspace] parsed payload:`, payload);
-            const url = payload.url;
+            const url = extractGoogleWorkspaceUrl(content);
 
             if (url) {
-                console.log(`[GoogleWorkspace] opening URL via window.open: ${url}`);
-                window.open(url);
-                setTimeout(() => this.leaf.detach(), 0);
-                return;
+                window.open(url, '_blank', 'noopener,noreferrer');
+                opened = true;
             }
-            console.warn("[GoogleWorkspace] No 'url' field found in payload:", payload);
-        } catch (e) {
-            // Strategy A failed — most likely because Google Drive Desktop is running in
-            // "stream" mode: the .gdoc file is a cloud-only stub that the OS filesystem
-            // reports as a directory (EISDIR).  Fall through to Strategy B.
-            console.warn("[GoogleWorkspace] vault.read() failed (likely a stream-mode stub):", (e as Error).message);
+        } catch {
+            // Fall through to shell fallback for stream-mode stubs.
         }
 
-        // Strategy B: hand the file back to the OS shell.
-        // Google Drive Desktop registers the .gdoc/.gsheet file associations at the OS level
-        // and will intercept shell.openPath(), resolve the stub, and open the browser.
-        await this.openViaShell(file);
-        setTimeout(() => this.leaf.detach(), 0);
+        if (!opened) {
+            opened = await this.openViaShell(file);
+        }
+
+        if (!opened) {
+            new Notice('Could not open this google workspace file.');
+        }
+
+        this.leaf.detach();
     }
 
-    private async openViaShell(file: TFile) {
-        // getBasePath() is only available on the desktop FileSystemAdapter
-        const basePath = (this.app.vault.adapter as any).getBasePath?.();
-        if (!basePath) {
-            console.error("[GoogleWorkspace] Could not resolve vault base path — is this a mobile vault?");
-            return;
+    private async openViaShell(file: TFile): Promise<boolean> {
+        const { adapter } = this.app.vault;
+        if (!(adapter instanceof FileSystemAdapter)) {
+            return false;
         }
-        const fullPath = require('path').join(basePath, file.path);
-        console.log(`[GoogleWorkspace] opening via shell.openPath: ${fullPath}`);
 
-        const { shell } = require('electron');
-        const error = await shell.openPath(fullPath);
-        if (error) {
-            console.error(`[GoogleWorkspace] shell.openPath failed: ${error}`);
+        const fullPath = `${adapter.getBasePath()}/${file.path}`;
+
+        const maybeRequire = (window as Window & {
+            require?: (moduleName: string) => unknown;
+        }).require;
+        if (!maybeRequire) {
+            return false;
         }
+
+        const electronModule = maybeRequire('electron');
+        if (!isElectronShellModule(electronModule)) {
+            return false;
+        }
+
+        const error = await electronModule.shell.openPath(fullPath);
+        return error.length === 0;
     }
 }
 
