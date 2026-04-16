@@ -1,9 +1,9 @@
 {
-	"id": "obsidian-google-workspace-opener",
+	"id": "google-workspace-opener",
 	"name": "Google Workspace Opener",
-	"version": "1.0.1",
+	"version": "1.0.2",
 	"minAppVersion": "0.15.0",
-	"description": "Open .gdoc and .gsheet files from Obsidian in an external browser.",
+	"description": "Open .gdoc and .gsheet files in an external browser.",
 	"author": "lazytarget",
 	"authorUrl": "https://github.com/lazytarget/",
 	"fundingUrl": "https://github.com/sponsors/lazytarget",
