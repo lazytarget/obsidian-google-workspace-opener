@@ -1,0 +1,12 @@
+---
+name: Sync labels
+
+# yamllint disable-line rule:truthy
+on:
+  schedule:
+    - cron: "34 5 * * *"
+  workflow_dispatch:
+
+jobs:
+  workflows:
+    uses: lazytarget/.github/.github/workflows/labels.yaml@6030a83527b1cb1e5c18a8f80ab766cc6b67eda4
