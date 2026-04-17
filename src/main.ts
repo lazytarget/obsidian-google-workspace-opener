@@ -108,8 +108,8 @@ export default class GoogleWorkspacePlugin extends Plugin {
             (leaf) => new GoogleWorkspaceView(leaf)
         );
 
-        // Override the default behavior for these specific extensions
-        this.registerExtensions(['gdoc', 'gsheet'], VIEW_TYPE_GOOGLE_WORKSPACE);
+        // Override the default behavior for Google Workspace shortcut files.
+        this.registerExtensions(['gdoc', 'gsheet', 'gform', 'gslides', 'gdraw'], VIEW_TYPE_GOOGLE_WORKSPACE);
     }
 
     onunload() {

@@ -1,9 +1,9 @@
 {
 	"id": "google-workspace-opener",
 	"name": "Google Workspace Opener",
-	"version": "1.0.2",
+	"version": "1.0.3",
 	"minAppVersion": "0.15.0",
-	"description": "Open .gdoc and .gsheet files in an external browser.",
+	"description": "Open Google Workspace shortcut files (.gdoc, .gsheet, .gform, .gslides, and .gdraw) in an external browser.",
 	"author": "lazytarget",
 	"authorUrl": "https://github.com/lazytarget/",
 	"fundingUrl": "https://github.com/sponsors/lazytarget",
