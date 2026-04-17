@@ -101,7 +101,7 @@ class GoogleWorkspaceView extends FileView {
 }
 
 export default class GoogleWorkspacePlugin extends Plugin {
-    async onload() {
+    onload() {
         // Register the custom view with Obsidian
         this.registerView(
             VIEW_TYPE_GOOGLE_WORKSPACE,
