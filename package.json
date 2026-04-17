@@ -1,7 +1,7 @@
 {
 	"name": "google-workspace-opener",
-	"version": "1.0.2",
-	"description": "Open .gdoc and .gsheet files in an external browser.",
+	"version": "1.0.3",
+	"description": "Open Google Workspace shortcut files (.gdoc, .gsheet, .gform, .gslides, and .gdraw) in an external browser.",
 	"main": "main.js",
 	"type": "module",
 	"engines": {

@@ -4,13 +4,13 @@
 [![Obsidian Downloads](https://img.shields.io/badge/dynamic/json?style=flat-square&logo=obsidian&color=7c3aed&label=downloads&query=%24%5B%22google-workspace-opener%22%5D.downloads&url=https%3A%2F%2Fraw.githubusercontent.com%2Fobsidianmd%2Fobsidian-releases%2Fmaster%2Fcommunity-plugin-stats.json)](https://obsidian.md/plugins?id=google-workspace-opener)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](LICENSE)
 
-Seamlessly open `.gdoc` and `.gsheet` files from your Obsidian vault directly in your browser. If you keep your Google Drive folder inside your vault, this plugin intercepts clicks on those Google Workspace shortcut files and routes them to the correct Google Docs or Google Sheets URL — instead of showing a confusing error in Obsidian.
+Seamlessly open `.gdoc`, `.gsheet`, `.gform`, `.gslides`, and `.gdraw` files from your Obsidian vault directly in your browser. If you keep your Google Drive folder inside your vault, this plugin intercepts clicks on those Google Workspace shortcut files and routes them to the correct Google Workspace URL — instead of showing a confusing error in Obsidian.
 
 ---
 
 ## How it works
 
-Google Drive Desktop stores `.gdoc` and `.gsheet` files as small stubs on your filesystem. The plugin handles both modes that Google Drive Desktop can operate in:
+Google Drive Desktop stores `.gdoc`, `.gsheet`, `.gform`, `.gslides`, and `.gdraw` files as small stubs on your filesystem. The plugin handles both modes that Google Drive Desktop can operate in:
 
 | Google Drive mode | Stub type | Strategy used |
 |---|---|---|
@@ -39,7 +39,7 @@ Both strategies silently close the Obsidian leaf after routing so there is no le
 
 ### Manual installation
 
-1. Download `main.js`, `manifest.json`, and `styles.css` from the [latest release](https://github.com/lazytarget/obsidian-google-workspace-opener/releases/latest).
+1. Download `main.js` and `manifest.json` from the [latest release](https://github.com/lazytarget/obsidian-google-workspace-opener/releases/latest).
 2. Copy the three files into `<your vault>/.obsidian/plugins/google-workspace-opener/`.
 3. Reload Obsidian and enable the plugin under **Settings → Community plugins**.
 
@@ -69,7 +69,7 @@ npm run build
 1. Update `minAppVersion` in `manifest.json` if needed.
 2. Run `npm version patch` (or `minor` / `major`) — this bumps `manifest.json`, `package.json`, and `versions.json` automatically.
 3. Create a GitHub release using the new version number as the tag (no `v` prefix).
-4. Attach `main.js`, `manifest.json`, and `styles.css` as release assets.
+4. Attach `main.js` and `manifest.json` as release assets.
 
 ---
 
